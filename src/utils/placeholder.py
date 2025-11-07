@@ -1,14 +1,17 @@
 """
-Module untuk deteksi dan replacement placeholder dalam format ${nama_placeholder}
+Module untuk deteksi dan replacement placeholder
+Format: ${nama_placeholder} untuk text, @{nama_placeholder} untuk image
 """
 import re
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Tuple
 
 
 class PlaceholderHandler:
     """Handler untuk mengelola placeholder dalam dokumen"""
 
-    PLACEHOLDER_PATTERN = r'\$\{([^}]+)\}'
+    TEXT_PLACEHOLDER_PATTERN = r'\$\{([^}]+)\}'
+    IMAGE_PLACEHOLDER_PATTERN = r'@\{([^}]+)\}'
+    PLACEHOLDER_PATTERN = TEXT_PLACEHOLDER_PATTERN  # Backward compatibility
 
     @staticmethod
     def find_placeholders(text: str) -> Set[str]:
@@ -69,3 +72,47 @@ class PlaceholderHandler:
             True jika valid, False jika tidak
         """
         return bool(re.match(r'^[a-zA-Z0-9_]+$', name))
+
+    @staticmethod
+    def find_image_placeholders(text: str) -> Set[str]:
+        """
+        Menemukan semua image placeholder unik dalam teks (@{})
+
+        Args:
+            text: Teks yang akan dicari image placeholdernya
+
+        Returns:
+            Set dari nama image placeholder tanpa @{} wrapper
+        """
+        matches = re.findall(PlaceholderHandler.IMAGE_PLACEHOLDER_PATTERN, text)
+        return set(matches)
+
+    @staticmethod
+    def find_all_placeholders_with_type(text: str) -> Tuple[Set[str], Set[str]]:
+        """
+        Menemukan semua placeholder (text dan image) dalam teks
+
+        Args:
+            text: Teks yang akan dicari placeholdernya
+
+        Returns:
+            Tuple (text_placeholders, image_placeholders)
+        """
+        text_placeholders = PlaceholderHandler.find_placeholders(text)
+        image_placeholders = PlaceholderHandler.find_image_placeholders(text)
+        return text_placeholders, image_placeholders
+
+    @staticmethod
+    def is_image_placeholder(placeholder_name: str, text: str) -> bool:
+        """
+        Check apakah placeholder adalah image placeholder
+
+        Args:
+            placeholder_name: Nama placeholder
+            text: Teks untuk dicek
+
+        Returns:
+            True jika image placeholder, False jika text placeholder
+        """
+        pattern = r'@\{' + re.escape(placeholder_name) + r'\}'
+        return bool(re.search(pattern, text))

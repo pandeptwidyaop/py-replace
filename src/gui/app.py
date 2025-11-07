@@ -23,6 +23,8 @@ class PlaceholderTable(ctk.CTkScrollableFrame):
         super().__init__(master, **kwargs)
 
         self.entries: Dict[str, ctk.CTkEntry] = {}
+        self.browse_buttons: Dict[str, ctk.CTkButton] = {}
+        self.placeholder_types: Dict[str, str] = {}  # 'text' or 'image'
         self.placeholders: List[str] = []
 
         # Header
@@ -43,42 +45,85 @@ class PlaceholderTable(ctk.CTkScrollableFrame):
             font=ctk.CTkFont(size=14, weight="bold")
         ).grid(row=0, column=1, padx=10, pady=5, sticky="w")
 
-    def set_placeholders(self, placeholders: List[str]):
+    def set_placeholders(self, text_placeholders: List[str], image_placeholders: List[str]):
         """
         Set placeholder list dan buat input fields
 
         Args:
-            placeholders: List nama placeholder
+            text_placeholders: List nama text placeholder
+            image_placeholders: List nama image placeholder
         """
         # Clear existing entries
         for widget in self.winfo_children()[1:]:  # Skip header
             widget.destroy()
         self.entries.clear()
+        self.browse_buttons.clear()
+        self.placeholder_types.clear()
 
-        self.placeholders = sorted(placeholders)
+        # Combine and sort all placeholders
+        all_placeholders = []
+        for p in text_placeholders:
+            all_placeholders.append((p, 'text'))
+        for p in image_placeholders:
+            all_placeholders.append((p, 'image'))
+
+        all_placeholders.sort(key=lambda x: x[0])
+        self.placeholders = [p[0] for p in all_placeholders]
 
         # Create rows for each placeholder
-        for idx, placeholder in enumerate(self.placeholders, start=1):
+        for idx, (placeholder, ptype) in enumerate(all_placeholders, start=1):
+            self.placeholder_types[placeholder] = ptype
+
             row_frame = ctk.CTkFrame(self)
             row_frame.grid(row=idx, column=0, sticky="ew", padx=5, pady=2)
             row_frame.grid_columnconfigure(1, weight=1)
 
-            # Placeholder label
-            ctk.CTkLabel(
+            # Placeholder label with type indicator
+            prefix = "@" if ptype == 'image' else "$"
+            label_color = "orange" if ptype == 'image' else "white"
+            label = ctk.CTkLabel(
                 row_frame,
-                text=f"${{{placeholder}}}",
-                font=ctk.CTkFont(size=12)
-            ).grid(row=0, column=0, padx=10, pady=5, sticky="w")
+                text=f"{prefix}{{{placeholder}}}",
+                font=ctk.CTkFont(size=12),
+                text_color=label_color
+            )
+            label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
 
             # Value entry
+            placeholder_text = "Image path or URL" if ptype == 'image' else f"Enter value for {placeholder}"
             entry = ctk.CTkEntry(
                 row_frame,
-                placeholder_text=f"Enter value for {placeholder}",
-                width=300
+                placeholder_text=placeholder_text,
+                width=250 if ptype == 'image' else 300
             )
             entry.grid(row=0, column=1, padx=10, pady=5, sticky="ew")
-
             self.entries[placeholder] = entry
+
+            # Add browse button for image placeholders
+            if ptype == 'image':
+                browse_btn = ctk.CTkButton(
+                    row_frame,
+                    text="Browse",
+                    command=lambda p=placeholder: self._browse_image(p),
+                    width=70,
+                    fg_color="gray40",
+                    hover_color="gray30"
+                )
+                browse_btn.grid(row=0, column=2, padx=5, pady=5)
+                self.browse_buttons[placeholder] = browse_btn
+
+    def _browse_image(self, placeholder: str):
+        """Browse untuk select image file"""
+        file_path = filedialog.askopenfilename(
+            title=f"Select Image for @{{{placeholder}}}",
+            filetypes=[
+                ("Image Files", "*.png *.jpg *.jpeg *.gif *.bmp *.tiff *.webp"),
+                ("All Files", "*.*")
+            ]
+        )
+        if file_path:
+            self.entries[placeholder].delete(0, 'end')
+            self.entries[placeholder].insert(0, file_path)
 
     def get_values(self) -> Dict[str, str]:
         """
@@ -91,6 +136,25 @@ class PlaceholderTable(ctk.CTkScrollableFrame):
             placeholder: entry.get()
             for placeholder, entry in self.entries.items()
         }
+
+    def get_text_and_image_values(self) -> tuple[Dict[str, str], Dict[str, str]]:
+        """
+        Mendapatkan nilai terpisah untuk text dan image placeholders
+
+        Returns:
+            Tuple (text_values, image_values)
+        """
+        text_values = {}
+        image_values = {}
+
+        for placeholder, entry in self.entries.items():
+            value = entry.get()
+            if self.placeholder_types.get(placeholder) == 'image':
+                image_values[placeholder] = value
+            else:
+                text_values[placeholder] = value
+
+        return text_values, image_values
 
     def clear(self):
         """Clear semua input fields"""
@@ -127,7 +191,8 @@ class DocxReplacerApp(ctk.CTk):
         # Variables
         self.docx_handler: DocxHandler = None
         self.current_file: str = None
-        self.current_placeholders: set = set()
+        self.current_text_placeholders: set = set()
+        self.current_image_placeholders: set = set()
 
         # Setup UI
         self._setup_ui()
@@ -250,22 +315,27 @@ class DocxReplacerApp(ctk.CTk):
             filename = os.path.basename(file_path)
             self.file_label.configure(text=f"Loaded: {filename}")
 
-            # Find placeholders
-            placeholders = self.docx_handler.find_all_placeholders()
+            # Find placeholders (both text and image)
+            text_placeholders, image_placeholders = self.docx_handler.find_all_placeholders_with_types()
 
-            if not placeholders:
+            if not text_placeholders and not image_placeholders:
                 messagebox.showinfo(
                     "No Placeholders",
                     "No placeholders found in the document.\n\n"
-                    "Placeholders should be in format: ${placeholder_name}"
+                    "Text placeholders: ${placeholder_name}\n"
+                    "Image placeholders: @{placeholder_name}"
                 )
                 return
 
             # Store placeholders
-            self.current_placeholders = placeholders
+            self.current_text_placeholders = text_placeholders
+            self.current_image_placeholders = image_placeholders
 
             # Display placeholders in table
-            self.placeholder_table.set_placeholders(list(placeholders))
+            self.placeholder_table.set_placeholders(
+                list(text_placeholders),
+                list(image_placeholders)
+            )
 
             # Enable buttons
             self.replace_button.configure(state="normal")
@@ -273,9 +343,12 @@ class DocxReplacerApp(ctk.CTk):
             self.load_config_button.configure(state="normal")
             self.export_template_button.configure(state="normal")
 
+            total_count = len(text_placeholders) + len(image_placeholders)
             messagebox.showinfo(
                 "Success",
-                f"Found {len(placeholders)} placeholder(s) in the document."
+                f"Found {total_count} placeholder(s):\n"
+                f"- Text: {len(text_placeholders)}\n"
+                f"- Image: {len(image_placeholders)}"
             )
 
         except Exception as e:
@@ -285,16 +358,17 @@ class DocxReplacerApp(ctk.CTk):
             )
 
     def replace_and_save(self):
-        """Replace placeholders dan save ke file baru"""
+        """Replace placeholders (text and image) dan save ke file baru"""
         if not self.docx_handler:
             return
 
-        # Get values from table
-        replacements = self.placeholder_table.get_values()
+        # Get values from table (separated by type)
+        text_values, image_values = self.placeholder_table.get_text_and_image_values()
 
         # Check for empty values
+        all_values = {**text_values, **image_values}
         empty_placeholders = [
-            key for key, value in replacements.items() if not value.strip()
+            key for key, value in all_values.items() if not value.strip()
         ]
 
         if empty_placeholders:
@@ -319,16 +393,36 @@ class DocxReplacerApp(ctk.CTk):
             return
 
         try:
-            # Perform replacement
-            self.docx_handler.replace_placeholders(replacements)
+            errors = []
+
+            # Replace text placeholders
+            if text_values:
+                self.docx_handler.replace_placeholders(text_values)
+
+            # Replace image placeholders
+            if image_values:
+                success_count, img_errors = self.docx_handler.replace_image_placeholders(
+                    image_values,
+                    width_inches=3.0
+                )
+                errors.extend(img_errors)
 
             # Save document
             self.docx_handler.save(output_path)
 
-            messagebox.showinfo(
-                "Success",
-                f"Document saved successfully!\n\n{output_path}"
-            )
+            # Show result
+            if errors:
+                error_msg = "\n".join(errors)
+                messagebox.showwarning(
+                    "Completed with Warnings",
+                    f"Document saved, but some images failed:\n\n{error_msg}\n\n"
+                    f"Output: {output_path}"
+                )
+            else:
+                messagebox.showinfo(
+                    "Success",
+                    f"Document saved successfully!\n\n{output_path}"
+                )
 
             # Reload the original document
             self.docx_handler.load(self.current_file)
@@ -341,7 +435,8 @@ class DocxReplacerApp(ctk.CTk):
 
     def load_config(self):
         """Load config dari CSV atau XLSX dan auto-fill values"""
-        if not self.current_placeholders:
+        all_placeholders = self.current_text_placeholders | self.current_image_placeholders
+        if not all_placeholders:
             messagebox.showwarning(
                 "No Document",
                 "Please load a DOCX file first."
@@ -377,8 +472,9 @@ class DocxReplacerApp(ctk.CTk):
                 return
 
             # Validate config
+            all_placeholders = self.current_text_placeholders | self.current_image_placeholders
             is_perfect, message, missing, extra = ConfigLoader.validate_config(
-                config, self.current_placeholders
+                config, all_placeholders
             )
 
             # Auto-fill values
@@ -404,7 +500,8 @@ class DocxReplacerApp(ctk.CTk):
 
     def export_template(self):
         """Export template config file"""
-        if not self.current_placeholders:
+        all_placeholders = self.current_text_placeholders | self.current_image_placeholders
+        if not all_placeholders:
             messagebox.showwarning(
                 "No Document",
                 "Please load a DOCX file first."
@@ -429,7 +526,7 @@ class DocxReplacerApp(ctk.CTk):
         try:
             success, error = ConfigLoader.save_template(
                 file_path,
-                list(self.current_placeholders)
+                list(all_placeholders)
             )
 
             if success:

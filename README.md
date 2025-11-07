@@ -5,8 +5,13 @@ Aplikasi desktop sederhana untuk mengganti placeholder dalam dokumen DOCX.
 ## Fitur
 
 - Load dokumen DOCX
-- Deteksi otomatis placeholder dengan format `${nama_placeholder}`
-- Tampilan tabel interaktif untuk input nilai replacement
+- **Dual Placeholder Support**:
+  - Text placeholder: `${nama_placeholder}` - untuk text replacement
+  - Image placeholder: `@{nama_placeholder}` - untuk image replacement
+- Deteksi otomatis kedua tipe placeholder
+- **Format Preservation** - Mempertahankan formatting text asli (bold, italic, underline, font, size, color)
+- Tampilan tabel interaktif dengan file browser untuk images
+- **Image dari URL atau Local** - Support image dari path lokal atau URL
 - **Load config dari CSV/XLSX** - Import nilai replacement secara batch
 - **Export template config** - Generate template CSV/XLSX dari placeholder yang terdeteksi
 - Validasi config terhadap placeholder yang ditemukan
@@ -65,8 +70,12 @@ python src/main.py
 ```
 
 2. Klik "Load DOCX" untuk memilih file dokumen
-3. Placeholder akan otomatis terdeteksi dan ditampilkan dalam tabel
-4. Isi nilai untuk setiap placeholder secara manual
+3. Placeholder akan otomatis terdeteksi dan ditampilkan dalam tabel:
+   - Text placeholders (`${}`) - putih
+   - Image placeholders (`@{}`) - orange, dengan tombol Browse
+4. Isi nilai untuk setiap placeholder:
+   - Text: Ketik langsung nilai pengganti
+   - Image: Ketik path/URL atau klik "Browse" untuk pilih file
 5. Klik "Replace & Save" untuk menyimpan dokumen baru
 
 ### Using Config File (CSV/XLSX)
@@ -89,11 +98,34 @@ python src/main.py
    nama,John Doe
    tanggal,2025-11-07
    alamat,Jakarta
+   logo,/path/to/logo.png
+   foto,https://example.com/photo.jpg
    ```
+
+   Note: Untuk image placeholder, value bisa berupa:
+   - Path lokal: `/path/to/image.png`
+   - URL: `https://example.com/image.jpg`
 
 4. Klik "Load Config (CSV/XLSX)" untuk auto-fill values
 5. Review dan edit jika perlu
 6. Klik "Replace & Save"
+
+### Format Preservation
+
+Aplikasi ini **mempertahankan semua formatting text asli** saat melakukan replacement:
+- **Bold**, *Italic*, <u>Underline</u>
+- Font family (Arial, Times New Roman, dll)
+- Font size (10pt, 12pt, 14pt, dll)
+- Font color
+
+**Contoh:**
+Jika dalam dokumen template Anda memiliki placeholder `${nama}` dengan format **Bold 14pt Red**,
+maka saat diganti dengan "John Doe", text "John Doe" akan tetap **Bold 14pt Red**.
+
+**Cara kerja:**
+- Aplikasi membaca formatting dari setiap run text
+- Saat replacement, formatting asli di-copy ke text baru
+- Support untuk placeholder yang span multiple runs dengan formatting berbeda
 
 ## Build Executable (untuk Developer)
 
@@ -140,7 +172,8 @@ py-replace/
 │   │   ├── __init__.py
 │   │   ├── docx_handler.py  # Load & save DOCX
 │   │   ├── placeholder.py   # Deteksi & replace placeholder
-│   │   └── config_loader.py # Load config dari CSV/XLSX
+│   │   ├── config_loader.py # Load config dari CSV/XLSX
+│   │   └── image_handler.py # Handle image operations & downloads
 ├── tests/                   # Unit tests
 ├── build.sh                 # Build script untuk macOS/Linux
 ├── build.bat                # Build script untuk Windows
