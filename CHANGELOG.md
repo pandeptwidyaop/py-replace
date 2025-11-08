@@ -1,3 +1,15 @@
+## [1.1.0](https://github.com/pandeptwidyaop/py-replace/compare/v1.0.4...v1.1.0) (2025-11-08)
+
+### ✨ Features
+
+* add header and footer support for image placeholder replacement ([93b3853](https://github.com/pandeptwidyaop/py-replace/commit/93b3853e1c94d93299f98da0110806fc66a8365d))
+
+### 🐛 Bug Fixes
+
+* **build:** correct python-docx template patch to use proper class and method names ([df5ffe1](https://github.com/pandeptwidyaop/py-replace/commit/df5ffe14cbd987c5c2d8976dd57cf50d8d58e9a8))
+* **build:** move python-docx template path patch to main.py ([845ca19](https://github.com/pandeptwidyaop/py-replace/commit/845ca19b5a424498f8b395f0d47b3790cba1e090))
+* **build:** simplify template path resolution and remove runtime hook ([0c2560f](https://github.com/pandeptwidyaop/py-replace/commit/0c2560ff68267e855d7b32e52ccfd827c8ee9879))
+
 ## [1.0.4](https://github.com/pandeptwidyaop/py-replace/compare/v1.0.3...v1.0.4) (2025-11-08)
 
 ### 🐛 Bug Fixes
