@@ -14,8 +14,16 @@ block_cipher = None
 import customtkinter
 ctk_path = Path(customtkinter.__file__).parent
 
-# Collect all data files from python-docx (including templates)
-docx_datas = collect_data_files('docx')
+# Get python-docx paths
+import docx
+docx_pkg_path = Path(docx.__file__).parent
+docx_templates_path = docx_pkg_path / 'templates'
+
+# Manually add docx templates with correct structure
+# This ensures templates are placed relative to docx/parts as expected
+docx_datas = [
+    (str(docx_templates_path), 'docx/templates'),  # Templates dir
+]
 
 a = Analysis(
     ['src/main.py'],
@@ -25,7 +33,7 @@ a = Analysis(
         (str(ctk_path), 'customtkinter'),  # Include CustomTkinter files
         ('src/gui', 'gui'),  # Include gui module
         ('src/utils', 'utils'),  # Include utils module
-    ] + docx_datas,  # Include all python-docx data files
+    ] + docx_datas,  # Include python-docx template files
     hiddenimports=[
         'customtkinter',
         'PIL._tkinter_finder',
@@ -59,17 +67,13 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
     [],
+    exclude_binaries=True,  # Changed to onedir mode
     name='DOCX-Replacer',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
     console=False,  # No console window (GUI only)
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -79,10 +83,21 @@ exe = EXE(
     icon=None,  # Add icon file here if you have one
 )
 
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='DOCX-Replacer',
+)
+
 # For macOS, create .app bundle
 if sys.platform == 'darwin':
     app = BUNDLE(
-        exe,
+        coll,
         name='DOCX-Replacer.app',
         icon=None,
         bundle_identifier='com.docxreplacer.app',
