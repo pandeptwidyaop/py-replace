@@ -5,6 +5,9 @@ Memperbaiki path template di bundled environment
 import os
 import sys
 
+# Debug: Print bahwa runtime hook dijalankan
+print("DEBUG: Runtime hook rthook_docx.py is running...")
+
 
 def patch_docx_template_paths():
     """Patch python-docx template path resolution untuk PyInstaller"""
