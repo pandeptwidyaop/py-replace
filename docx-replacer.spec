@@ -51,7 +51,7 @@ a = Analysis(
     ] + docx_hidden,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=['rthook_docx.py'],
+    runtime_hooks=[],
     excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,

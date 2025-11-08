@@ -22,14 +22,11 @@ if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     import docx.parts.settings
     import docx.parts.comments
 
-    # Determine template directory based on platform
-    if sys.platform == 'darwin':
-        # macOS .app bundle - templates are in Frameworks
-        base_path = os.path.join(sys._MEIPASS, '..', 'Frameworks')
-    else:
-        # Windows/Linux - templates are in _MEIPASS
-        base_path = sys._MEIPASS
-
+    # Determine template directory based on platform and bundle structure
+    # _MEIPASS points to the directory containing all bundled files
+    # For .app bundle: _MEIPASS is .../Contents/Frameworks/
+    # For onedir: _MEIPASS is .../_internal/
+    base_path = sys._MEIPASS
     template_dir = os.path.abspath(os.path.join(base_path, 'docx', 'templates'))
 
     # Patch all classes that use template files
