@@ -50,9 +50,14 @@ jobs:
         echo "Semantic release exit code: $EXIT_CODE"
 
         # Check if new release will be published
-        if grep -q "The next release version is" dry-run-output.txt; then
+        # Look for "Published release X.Y.Z" or "The next release version is X.Y.Z"
+        if grep -qE "(Published release|The next release version is)" dry-run-output.txt; then
           echo "new_release_published=true" >> $GITHUB_OUTPUT
-          VERSION=$(grep "The next release version is" dry-run-output.txt | sed 's/.*is //' | tr -d '[:space:]')
+          # Extract version from either pattern
+          VERSION=$(grep -oE "Published release [0-9]+\.[0-9]+\.[0-9]+" dry-run-output.txt | sed 's/Published release //' | head -1)
+          if [ -z "$VERSION" ]; then
+            VERSION=$(grep -oE "The next release version is [0-9]+\.[0-9]+\.[0-9]+" dry-run-output.txt | sed 's/.*is //' | head -1)
+          fi
           echo "new_release_version=$VERSION" >> $GITHUB_OUTPUT
           echo "✅ New release will be published: v$VERSION"
         else
