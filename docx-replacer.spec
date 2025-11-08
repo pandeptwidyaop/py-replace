@@ -6,6 +6,7 @@ Build single executable yang bisa didistribusikan tanpa Python
 
 import sys
 from pathlib import Path
+from PyInstaller.utils.hooks import collect_data_files
 
 block_cipher = None
 
@@ -13,10 +14,8 @@ block_cipher = None
 import customtkinter
 ctk_path = Path(customtkinter.__file__).parent
 
-# Get python-docx template path
-import docx
-docx_path = Path(docx.__file__).parent
-docx_templates_path = docx_path / 'templates'
+# Collect all data files from python-docx (including templates)
+docx_datas = collect_data_files('docx')
 
 a = Analysis(
     ['src/main.py'],
@@ -26,8 +25,7 @@ a = Analysis(
         (str(ctk_path), 'customtkinter'),  # Include CustomTkinter files
         ('src/gui', 'gui'),  # Include gui module
         ('src/utils', 'utils'),  # Include utils module
-        (str(docx_templates_path), 'docx/templates'),  # Include python-docx templates
-    ],
+    ] + docx_datas,  # Include all python-docx data files
     hiddenimports=[
         'customtkinter',
         'PIL._tkinter_finder',
