@@ -1,3 +1,16 @@
+## [1.0.4](https://github.com/pandeptwidyaop/py-replace/compare/v1.0.3...v1.0.4) (2025-11-08)
+
+### 🐛 Bug Fixes
+
+* **macos:** fix template path resolution for macOS app bundle ([dd6a983](https://github.com/pandeptwidyaop/py-replace/commit/dd6a98304bb15ab0db58998ebd80c975ed09c5dd))
+
+## [1.0.3](https://github.com/pandeptwidyaop/py-replace/compare/v1.0.2...v1.0.3) (2025-11-08)
+
+### 🐛 Bug Fixes
+
+* **build:** add runtime hook to fix python-docx template path resolution ([dd675a7](https://github.com/pandeptwidyaop/py-replace/commit/dd675a73f17831e3cd8f1c1285ad8bb00beeb091))
+* **build:** collect all docx submodules for proper template resolution ([902c1cb](https://github.com/pandeptwidyaop/py-replace/commit/902c1cba3bff233b0e5d94ed2d0f95d810d3b576))
+
 ## [1.0.2](https://github.com/pandeptwidyaop/py-replace/compare/v1.0.1...v1.0.2) (2025-11-08)
 
 ### 🐛 Bug Fixes
