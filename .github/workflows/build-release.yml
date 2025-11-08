@@ -6,6 +6,11 @@ on:
       - main
   workflow_dispatch:  # Allow manual trigger
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
 jobs:
   version-check:
     name: Check Version (Semantic Release Dry Run)
@@ -177,7 +182,8 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        persist-credentials: false
+        persist-credentials: true
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
