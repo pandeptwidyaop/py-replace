@@ -1,3 +1,9 @@
+## [1.0.1](https://github.com/pandeptwidyaop/py-replace/compare/v1.0.0...v1.0.1) (2025-11-08)
+
+### 🐛 Bug Fixes
+
+* include python-docx template path in spec file ([a774796](https://github.com/pandeptwidyaop/py-replace/commit/a774796e2d98e4161a9285feb8108587bcb16809))
+
 ## 1.0.0 (2025-11-08)
 
 ### ⚠ BREAKING CHANGES
