@@ -1,3 +1,11 @@
+## [1.0.2](https://github.com/pandeptwidyaop/py-replace/compare/v1.0.1...v1.0.2) (2025-11-08)
+
+### 🐛 Bug Fixes
+
+* **build:** switch to onedir mode to fix template path resolution ([cbc542c](https://github.com/pandeptwidyaop/py-replace/commit/cbc542c82d1cf84379d1e2c0cc4fbeac46ac862c))
+* **build:** use collect_data_files for python-docx templates ([b0807f0](https://github.com/pandeptwidyaop/py-replace/commit/b0807f070f89ba5d09af5393b9fc0fe1f9bb8554))
+* **ci:** update packaging for onedir build mode ([f346b04](https://github.com/pandeptwidyaop/py-replace/commit/f346b04458d02f7f6f5196e08f3dc4cc2d831340))
+
 ## [1.0.1](https://github.com/pandeptwidyaop/py-replace/compare/v1.0.0...v1.0.1) (2025-11-08)
 
 ### 🐛 Bug Fixes
