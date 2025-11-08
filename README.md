@@ -21,7 +21,7 @@ Aplikasi desktop sederhana untuk mengganti placeholder dalam dokumen DOCX.
 
 ### Untuk End Users (Tanpa Python)
 
-Download executable yang sudah di-build untuk platform Anda dari [**Releases**](https://github.com/YOUR_USERNAME/py-replace/releases/latest):
+Download executable yang sudah di-build untuk platform Anda dari [**Releases**](https://github.com/pandeptwidyaop/py-replace/releases/latest):
 
 - **Windows**: `DOCX-Replacer-Windows.zip`
   - Extract dan jalankan `DOCX-Replacer.exe`
@@ -235,7 +235,7 @@ Trigger workflow manual tanpa push:
 
 ### Download Releases
 
-User bisa download dari [Releases page](https://github.com/YOUR_USERNAME/py-replace/releases)
+User bisa download dari [Releases page](https://github.com/pandeptwidyaop/py-replace/releases)
 
 ### Configuration Files
 

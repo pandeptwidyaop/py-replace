@@ -1,6 +1,6 @@
 {
   "branches": ["main"],
-  "repositoryUrl": "https://github.com/YOUR_USERNAME/py-replace",
+  "repositoryUrl": "https://github.com/pandeptwidyaop/py-replace",
   "plugins": [
     [
       "@semantic-release/commit-analyzer",
