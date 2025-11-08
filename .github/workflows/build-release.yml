@@ -151,7 +151,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         cd dist
-        tar -czf ../${{ matrix.asset_name }} DOCX-Replacer
+        tar -czf ../${{ matrix.asset_name }} DOCX-Replacer/
         cd ..
 
     - name: Package artifact (macOS)
@@ -166,7 +166,7 @@ jobs:
       shell: pwsh
       run: |
         cd dist
-        Compress-Archive -Path DOCX-Replacer.exe -DestinationPath ..\${{ matrix.asset_name }}
+        Compress-Archive -Path DOCX-Replacer -DestinationPath ..\${{ matrix.asset_name }}
         cd ..
 
     - name: Upload artifact
