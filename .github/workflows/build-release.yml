@@ -28,15 +28,21 @@ jobs:
 
     - name: Install semantic-release
       run: |
-        npm install -g semantic-release @semantic-release/git @semantic-release/changelog @semantic-release/exec conventional-changelog-conventionalcommits
+        npm install -g semantic-release @semantic-release/git @semantic-release/changelog @semantic-release/github @semantic-release/exec conventional-changelog-conventionalcommits
 
     - name: Run semantic-release (dry run)
       id: semantic
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        set +e  # Don't exit on error
         npx semantic-release --dry-run --no-ci > dry-run-output.txt 2>&1
+        EXIT_CODE=$?
+        set -e  # Re-enable exit on error
+
         cat dry-run-output.txt
+        echo "---"
+        echo "Semantic release exit code: $EXIT_CODE"
 
         # Check if new release will be published
         if grep -q "The next release version is" dry-run-output.txt; then
@@ -180,7 +186,7 @@ jobs:
 
     - name: Install semantic-release
       run: |
-        npm install -g semantic-release @semantic-release/git @semantic-release/changelog @semantic-release/exec conventional-changelog-conventionalcommits
+        npm install -g semantic-release @semantic-release/git @semantic-release/changelog @semantic-release/github @semantic-release/exec conventional-changelog-conventionalcommits
 
     - name: Download all artifacts
       uses: actions/download-artifact@v4
