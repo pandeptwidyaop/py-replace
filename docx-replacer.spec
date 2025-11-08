@@ -13,6 +13,11 @@ block_cipher = None
 import customtkinter
 ctk_path = Path(customtkinter.__file__).parent
 
+# Get python-docx template path
+import docx
+docx_path = Path(docx.__file__).parent
+docx_templates_path = docx_path / 'templates'
+
 a = Analysis(
     ['src/main.py'],
     pathex=['src'],  # Add src to path
@@ -21,6 +26,7 @@ a = Analysis(
         (str(ctk_path), 'customtkinter'),  # Include CustomTkinter files
         ('src/gui', 'gui'),  # Include gui module
         ('src/utils', 'utils'),  # Include utils module
+        (str(docx_templates_path), 'docx/templates'),  # Include python-docx templates
     ],
     hiddenimports=[
         'customtkinter',
