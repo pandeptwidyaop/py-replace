@@ -1,0 +1,204 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  version-check:
+    name: Check Version (Semantic Release Dry Run)
+    runs-on: ubuntu-latest
+    outputs:
+      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for semantic-release
+        persist-credentials: false
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install semantic-release
+      run: |
+        npm install -g semantic-release @semantic-release/git @semantic-release/changelog @semantic-release/exec conventional-changelog-conventionalcommits
+
+    - name: Run semantic-release (dry run)
+      id: semantic
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        npx semantic-release --dry-run --no-ci > dry-run-output.txt 2>&1
+        cat dry-run-output.txt
+
+        # Check if new release will be published
+        if grep -q "The next release version is" dry-run-output.txt; then
+          echo "new_release_published=true" >> $GITHUB_OUTPUT
+          VERSION=$(grep "The next release version is" dry-run-output.txt | sed 's/.*is //' | tr -d '[:space:]')
+          echo "new_release_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "✅ New release will be published: v$VERSION"
+        else
+          echo "new_release_published=false" >> $GITHUB_OUTPUT
+          echo "ℹ️ No new release will be published"
+        fi
+
+  build:
+    name: Build on ${{ matrix.os }}
+    needs: version-check
+    if: needs.version-check.outputs.new_release_published == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: DOCX-Replacer-Linux
+            build_script: build.sh
+            output_path: dist/DOCX-Replacer
+            asset_name: DOCX-Replacer-Linux.tar.gz
+
+          - os: macos-latest
+            artifact_name: DOCX-Replacer-macOS
+            build_script: build.sh
+            output_path: dist/DOCX-Replacer.app
+            asset_name: DOCX-Replacer-macOS.zip
+
+          - os: windows-latest
+            artifact_name: DOCX-Replacer-Windows
+            build_script: build.bat
+            output_path: dist/DOCX-Replacer.exe
+            asset_name: DOCX-Replacer-Windows.zip
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Install system dependencies (Ubuntu)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-tk
+
+    - name: Install system dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew install python-tk@3.13
+
+    - name: Create virtual environment
+      shell: bash
+      run: |
+        python -m venv venv
+
+    - name: Install Python dependencies (Linux/macOS)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        source venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Install Python dependencies (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        .\venv\Scripts\Activate.ps1
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Build executable (Linux/macOS)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        chmod +x ${{ matrix.build_script }}
+        ./${{ matrix.build_script }}
+
+    - name: Build executable (Windows)
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        call ${{ matrix.build_script }}
+
+    - name: Package artifact (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        cd dist
+        tar -czf ../${{ matrix.asset_name }} DOCX-Replacer
+        cd ..
+
+    - name: Package artifact (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        cd dist
+        zip -r ../${{ matrix.asset_name }} DOCX-Replacer.app
+        cd ..
+
+    - name: Package artifact (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        cd dist
+        Compress-Archive -Path DOCX-Replacer.exe -DestinationPath ..\${{ matrix.asset_name }}
+        cd ..
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: ${{ matrix.asset_name }}
+        retention-days: 7
+
+  release:
+    name: Create Release with Semantic Release
+    needs: [version-check, build]
+    runs-on: ubuntu-latest
+    if: needs.version-check.outputs.new_release_published == 'true'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install semantic-release
+      run: |
+        npm install -g semantic-release @semantic-release/git @semantic-release/changelog @semantic-release/exec conventional-changelog-conventionalcommits
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Display structure of downloaded files
+      run: ls -R artifacts
+
+    - name: Prepare release assets
+      run: |
+        mkdir -p release-assets
+        cp artifacts/DOCX-Replacer-Linux/DOCX-Replacer-Linux.tar.gz release-assets/
+        cp artifacts/DOCX-Replacer-macOS/DOCX-Replacer-macOS.zip release-assets/
+        cp artifacts/DOCX-Replacer-Windows/DOCX-Replacer-Windows.zip release-assets/
+
+    - name: Run semantic-release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        npx semantic-release
