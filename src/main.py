@@ -10,7 +10,6 @@ if getattr(sys, 'frozen', False):
     src_dir = Path(sys._MEIPASS)
 else:
     # Running as script
-
     src_dir = Path(__file__).parent
 
 sys.path.insert(0, str(src_dir))
