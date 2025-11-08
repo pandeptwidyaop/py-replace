@@ -1,3 +1,9 @@
+## [1.0.4](https://github.com/pandeptwidyaop/py-replace/compare/v1.0.3...v1.0.4) (2025-11-08)
+
+### 🐛 Bug Fixes
+
+* **macos:** fix template path resolution for macOS app bundle ([dd6a983](https://github.com/pandeptwidyaop/py-replace/commit/dd6a98304bb15ab0db58998ebd80c975ed09c5dd))
+
 ## [1.0.3](https://github.com/pandeptwidyaop/py-replace/compare/v1.0.2...v1.0.3) (2025-11-08)
 
 ### 🐛 Bug Fixes
