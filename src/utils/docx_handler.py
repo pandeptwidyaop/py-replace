@@ -109,6 +109,20 @@ class DocxHandler:
                             PlaceholderHandler.find_image_placeholders(paragraph.text)
                         )
 
+        # Scan headers and footers
+        for section in self.document.sections:
+            # Headers
+            for paragraph in section.header.paragraphs:
+                placeholders.update(
+                    PlaceholderHandler.find_image_placeholders(paragraph.text)
+                )
+
+            # Footers
+            for paragraph in section.footer.paragraphs:
+                placeholders.update(
+                    PlaceholderHandler.find_image_placeholders(paragraph.text)
+                )
+
         return placeholders
 
     def find_all_placeholders_with_types(self) -> Tuple[Set[str], Set[str]]:
@@ -332,6 +346,24 @@ class DocxHandler:
                                 final_path,
                                 width_inches
                             )
+
+                # Replace in headers and footers
+                for section in self.document.sections:
+                    # Headers
+                    replaced += self._replace_image_in_paragraphs(
+                        section.header.paragraphs,
+                        placeholder,
+                        final_path,
+                        width_inches
+                    )
+
+                    # Footers
+                    replaced += self._replace_image_in_paragraphs(
+                        section.footer.paragraphs,
+                        placeholder,
+                        final_path,
+                        width_inches
+                    )
 
                 if replaced > 0:
                     success_count += 1
