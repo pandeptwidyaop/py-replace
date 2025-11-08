@@ -17,7 +17,6 @@ sys.path.insert(0, str(src_dir))
 
 # Patch python-docx template paths untuk PyInstaller
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-    import docx.oxml
     import docx.parts.hdrftr
     import docx.parts.styles
     import docx.parts.settings
@@ -38,14 +37,14 @@ if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
         def loader(_cls):
             path = os.path.join(template_dir, filename)
             with open(path, 'rb') as f:
-                return docx.oxml.parse_xml(f.read())
+                return f.read()
         return classmethod(loader)
 
-    docx.parts.hdrftr.Header.default = make_template_loader("default-header.xml")
-    docx.parts.hdrftr.Footer.default = make_template_loader("default-footer.xml")
-    docx.parts.styles.Styles.default = make_template_loader("default-styles.xml")
-    docx.parts.settings.Settings.default = make_template_loader("default-settings.xml")
-    docx.parts.comments.Comments.default = make_template_loader("default-comments.xml")
+    docx.parts.hdrftr.HeaderPart._default_header_xml = make_template_loader("default-header.xml")
+    docx.parts.hdrftr.FooterPart._default_footer_xml = make_template_loader("default-footer.xml")
+    docx.parts.styles.StylesPart._default_styles_xml = make_template_loader("default-styles.xml")
+    docx.parts.settings.SettingsPart._default_settings_xml = make_template_loader("default-settings.xml")
+    docx.parts.comments.CommentsPart._default_comments_xml = make_template_loader("default-comments.xml")
 
 from gui.app import main
 
